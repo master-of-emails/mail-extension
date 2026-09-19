@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Inbox Mail Grabber</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Inbox Grabber</h1>
+    <span id="status" class="status off">idle</span>
+  </header>
+
+  <section class="current">
+    <label for="current-mail">Current address</label>
+    <div class="row">
+      <input id="current-mail" type="text" readonly placeholder="waiting for mail…">
+      <button id="copy-current" class="btn icon" title="Copy">Copy</button>
+    </div>
+    <div id="current-time" class="muted"></div>
+  </section>
+
+  <section class="history">
+    <div class="section-head">
+      <label>History</label>
+      <button id="clear" class="btn ghost">Clear</button>
+    </div>
+    <ul id="history-list"></ul>
+  </section>
+
+  <footer>
+    <span id="count" class="muted">0 saved</span>
+    <a id="open-inbox" href="#" class="muted">open inbox ↗</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
