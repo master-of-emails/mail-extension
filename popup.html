@@ -2,45 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Inbox Mail Grabber</title>
+  <title>email Monitor</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <header>
-    <h1>Inbox Grabber</h1>
-    <span id="status" class="status off">idle</span>
+  <header class="hdr">
+    <div class="addr-block">
+      <div class="label">Current address</div>
+      <div id="addr" class="addr-value" title="">—</div>
+    </div>
+    <div class="addr-actions">
+      <button id="copy" class="btn" type="button">Copy</button>
+      <button id="new" class="btn primary" type="button">New</button>
+    </div>
   </header>
 
-  <section class="current">
-    <label for="current-mail">Current address</label>
-    <div class="row">
-      <input id="current-mail" type="text" readonly placeholder="waiting for mail…">
-      <button id="copy-current" class="btn icon" title="Copy">Copy</button>
-      <button id="new-address" class="btn icon" title="Get a new address">New</button>
-    </div>
-    <div id="current-time" class="muted"></div>
+  <section class="section">
+    <h2>Messages</h2>
+    <div id="msgs" class="list"></div>
   </section>
 
-  <section class="mail">
-    <div class="section-head">
-      <label>Messages</label>
-      <button id="clear-mail" class="btn ghost">Clear</button>
-    </div>
-    <ul id="mail-list"></ul>
+  <section class="section">
+    <h2>History</h2>
+    <div id="hist" class="list"></div>
   </section>
-
-  <section class="history">
-    <div class="section-head">
-      <label>Address history</label>
-      <button id="clear" class="btn ghost">Clear</button>
-    </div>
-    <ul id="history-list"></ul>
-  </section>
-
-  <footer>
-    <span id="count" class="muted">0 saved</span>
-    <a id="open-inbox" href="#" class="muted">open inbox ↗</a>
-  </footer>
 
   <script src="popup.js"></script>
 </body>

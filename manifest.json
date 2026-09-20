@@ -1,37 +1,45 @@
 {
   "manifest_version": 3,
-  "name": "Inbox Mail Grabber",
-  "version": "1.0",
-  "description": "Silently captures the temporary email address from the inbox page.",
-  "permissions": ["scripting","tabs","storage"],
-  "host_permissions": ["*://temp-mail.org/*"],
-  "content_scripts": [
-    {
-      "matches": ["*://temp-mail.org/*","*://*.temp-mail.org/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle",
-      "all_frames": true
-    }
+  "name": "temp-mail.org Monitor",
+  "version": "1.1.0",
+  "description": "Silently monitors temp-mail.org and surfaces verification codes and confirm links.",
+  "permissions": ["tabs", "storage", "tabHide"],
+  "host_permissions": [
+    "*://temp-mail.org/*",
+    "*://*.temp-mail.org/*"
   ],
   "background": {
     "scripts": ["background.js"]
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Inbox Mail Grabber",
     "default_icon": {
       "48": "icon.svg",
-      "96": "icon.svg"
-    }
+      "96": "icon.svg",
+      "128": "icon.svg"
+    },
+    "default_title": "temp-mail.org Monitor"
   },
   "icons": {
     "48": "icon.svg",
-    "96": "icon.svg"
+    "96": "icon.svg",
+    "128": "icon.svg"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://temp-mail.org/*",
+        "*://*.temp-mail.org/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "inbox-grabber@example.com",
-      "strict_min_version": "109.0"
+      "id": "myinbox-monitor@local",
+      "strict_min_version": "115.0"
     }
   }
 }

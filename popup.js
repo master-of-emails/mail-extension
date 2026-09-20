@@ -1,220 +1,240 @@
-const $ = (id) => document.getElementById(id);
-const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+/* popup.js */
 
-function fmtTime(ts) {
+const $ = (sel) => document.querySelector(sel);
+
+function relTime(ts) {
   if (!ts) return '';
-  const diff = (Date.now() - ts) / 1000;
-  if (diff < 60)    return `${Math.floor(diff)}s ago`;
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return new Date(ts).toLocaleDateString();
+  const d = Math.max(0, Date.now() - ts);
+  const s = Math.floor(d / 1000);
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const dd = Math.floor(h / 24);
+  return dd + 'd ago';
 }
 
-async function copy(text, btn) {
+async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
-    if (btn) {
-      const old = btn.textContent;
-      btn.textContent = 'Copied';
-      btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 900);
-    }
-  } catch (e) { console.warn('copy failed', e); }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// --- render ----------------------------------------------------------------
+/* ---- render ---- */
 
-function renderAddress(state) {
-  const { lastMail, lastMailAt } = state;
-  const cur = $('current-mail');
-  cur.value = lastMail || '';
-  cur.placeholder = lastMail ? '' : 'waiting for mail…';
-  $('current-time').textContent = lastMail ? `captured ${fmtTime(lastMailAt)}` : '';
+async function render() {
+  const store = await browser.storage.local.get(['address', 'mailItems', 'history']);
 
-  const status = $('status');
-  const fresh = lastMailAt && (Date.now() - lastMailAt) < 5 * 60 * 1000;
-  status.textContent = lastMail ? (fresh ? 'live' : 'stale') : 'idle';
-  status.className = 'status ' + (fresh ? 'on' : 'off');
-}
+  const addr = store.address || '';
+  const addrEl = $('#addr');
+  addrEl.textContent = addr || '—';
+  addrEl.title = addr;
 
-function renderMailList(state) {
-  const items = Array.isArray(state.mailItems) ? state.mailItems : [];
-  const list  = $('mail-list');
-  list.innerHTML = '';
+  const items = Array.isArray(store.mailItems) ? store.mailItems : [];
+  const hist = Array.isArray(store.history) ? store.history : [];
 
+  const msgs = $('#msgs');
+  msgs.innerHTML = '';
   if (!items.length) {
-    const li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = 'No messages yet.';
-    list.appendChild(li);
-    return;
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = 'No messages yet.';
+    msgs.appendChild(e);
+  } else {
+    for (const it of items) msgs.appendChild(renderCard(it));
   }
 
-  for (const item of items) {
-    const li = document.createElement('li');
-    li.className = 'mail-item ' + (item.found ? 'has-cta' : 'no-cta');
+  const hEl = $('#hist');
+  hEl.innerHTML = '';
+  if (!hist.length) {
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.textContent = 'Empty.';
+    hEl.appendChild(e);
+  } else {
+    for (const h of hist) hEl.appendChild(renderHist(h));
+  }
+}
 
-    const subj = document.createElement('div');
-    subj.className = 'mail-subject';
-    subj.textContent = item.subject || '(no subject)';
-    subj.title = item.subject || '';
-    li.appendChild(subj);
+function renderCard(it) {
+  const card = document.createElement('div');
+  card.className = 'card';
 
-    const meta = document.createElement('div');
-    meta.className = 'mail-meta';
-    const bits = [fmtTime(item.at)];
-    if (item.ctas.length)  bits.push(`${item.ctas.length} action${item.ctas.length > 1 ? 's' : ''}`);
-    if (item.codes.length) bits.push(`${item.codes.length} code${item.codes.length > 1 ? 's' : ''}`);
-    if (item.error)        bits.push('fetch failed');
-    meta.textContent = bits.join(' · ');
-    li.appendChild(meta);
+  const head = document.createElement('div');
+  head.className = 'card-head';
 
-    // codes
-    for (const c of item.codes) {
+  const subj = document.createElement('div');
+  subj.className = 'card-subject';
+  subj.textContent = it.subject || '(no subject)';
+  subj.title = it.subject || '';
+
+  const time = document.createElement('div');
+  time.className = 'card-time';
+  time.textContent = relTime(it.ts);
+
+  head.appendChild(subj);
+  head.appendChild(time);
+  card.appendChild(head);
+
+  const ctasCount = (it.ctas || []).length;
+  const codesCount = (it.codes || []).length;
+
+  const meta = document.createElement('div');
+  meta.className = 'card-meta';
+  meta.textContent = `${ctasCount} CTA · ${codesCount} code${codesCount === 1 ? '' : 's'}`;
+  card.appendChild(meta);
+
+  if (codesCount) {
+    const wrap = document.createElement('div');
+    wrap.className = 'codes';
+    for (const code of it.codes) {
       const row = document.createElement('div');
       row.className = 'code-row';
 
-      const codeEl = document.createElement('span');
-      codeEl.className = 'code';
-      codeEl.textContent = c.value;
+      const num = document.createElement('span');
+      num.className = 'code';
+      num.textContent = code;
 
       const btn = document.createElement('button');
-      btn.className = 'btn icon';
+      btn.type = 'button';
+      btn.className = 'copy-btn';
       btn.textContent = 'Copy';
-      btn.addEventListener('click', () => copy(c.value, btn));
+      btn.addEventListener('click', async () => {
+        if (await copyText(code)) {
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 1100);
+        }
+      });
 
-      row.append(codeEl, btn);
-      li.appendChild(row);
+      row.appendChild(num);
+      row.appendChild(btn);
+      wrap.appendChild(row);
     }
+    card.appendChild(wrap);
+  }
 
-    // CTA buttons + raw URL
-    if (item.ctas.length) {
-      for (const cta of item.ctas) {
-        const btn = document.createElement('button');
-        btn.className = 'cta-btn';
+  if (ctasCount) {
+    const wrap = document.createElement('div');
+    wrap.className = 'ctas';
+    for (const cta of it.ctas) {
+      const w = document.createElement('div');
+      w.className = 'cta';
 
-        const label = document.createElement('span');
-        label.textContent = cta.text || cta.host;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cta-btn';
+      btn.textContent = cta.label || cta.text || cta.href;
+      btn.title = cta.href;
+      btn.addEventListener('click', () => {
+        window.open(cta.href, '_blank', 'noopener,noreferrer');
+      });
 
-        const host = document.createElement('span');
-        host.className = 'host';
-        host.textContent = cta.host;
+      const url = document.createElement('div');
+      url.className = 'cta-url';
+      url.textContent = cta.href;
+      url.title = 'Click to copy';
+      url.addEventListener('click', async () => {
+        if (await copyText(cta.href)) {
+          const prev = url.textContent;
+          url.textContent = 'Copied!';
+          setTimeout(() => { url.textContent = prev; }, 900);
+        }
+      });
 
-        btn.append(label, host);
-        btn.title = cta.href;
-        btn.addEventListener('click', () => {
-          window.open(cta.href, '_blank', 'noopener,noreferrer');
-        });
-        li.appendChild(btn);
-
-        const raw = document.createElement('div');
-        raw.className = 'raw-url';
-        raw.textContent = cta.href;
-        raw.title = 'Click to copy';
-        raw.addEventListener('click', () => copy(cta.href, null));
-        li.appendChild(raw);
-      }
-    } else {
-      const none = document.createElement('div');
-      none.className = 'no-url';
-      none.textContent = 'no url found';
-      li.appendChild(none);
-
-      const site = document.createElement('div');
-      site.className = 'no-url-site';
-      site.textContent = item.viewUrl || '';
-      site.title = 'Click to copy';
-      site.addEventListener('click', () => copy(item.viewUrl, null));
-      li.appendChild(site);
+      w.appendChild(btn);
+      w.appendChild(url);
+      wrap.appendChild(w);
     }
+    card.appendChild(wrap);
+  }
 
-    // always offer a link back to the view page
-    const a = document.createElement('a');
-    a.className = 'view-link';
-    a.href = item.viewUrl;
-    a.textContent = 'open in inbox ↗';
-    a.addEventListener('click', (e) => {
+  if (!ctasCount && !codesCount) {
+    const none = document.createElement('div');
+    none.className = 'none';
+    none.textContent = 'no url found';
+    card.appendChild(none);
+  }
+
+  if (it.viewUrl) {
+    const open = document.createElement('a');
+    open.className = 'open-link';
+    open.href = '#';
+    open.textContent = 'open in inbox ↗';
+    open.addEventListener('click', (e) => {
       e.preventDefault();
-      window.open(item.viewUrl, '_blank', 'noopener,noreferrer');
+      browser.tabs.create({ url: it.viewUrl, active: true });
     });
-    li.appendChild(a);
-
-    list.appendChild(li);
-  }
-}
-
-function renderHistory(state) {
-  const history = Array.isArray(state.history) ? state.history : [];
-  const list = $('history-list');
-  list.innerHTML = '';
-
-  if (!history.length) {
-    const li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = 'No address captured yet.';
-    list.appendChild(li);
-  } else {
-    for (const item of history) {
-      const li = document.createElement('li');
-      li.title = 'Click to copy';
-
-      const val = document.createElement('span');
-      val.textContent = item.value;
-
-      const t = document.createElement('span');
-      t.className = 'time';
-      t.textContent = fmtTime(item.at);
-
-      li.append(val, t);
-      li.addEventListener('click', () => copy(item.value, null));
-      list.appendChild(li);
-    }
+    card.appendChild(open);
   }
 
-  $('count').textContent = `${history.length} saved`;
-
-  const link = $('open-inbox');
-  if (state.lastUrl) { link.href = state.lastUrl; link.style.display = ''; }
-  else               { link.style.display = 'none'; }
+  return card;
 }
 
-async function refresh() {
-  const state = await browser.storage.local.get([
-    'lastMail','lastMailAt','lastUrl','history','mailItems',
-  ]);
-  renderAddress(state);
-  renderMailList(state);
-  renderHistory(state);
+function renderHist(h) {
+  const row = document.createElement('div');
+  row.className = 'hist-row';
+
+  const s = document.createElement('div');
+  s.className = 'hist-subject';
+  s.textContent = h.subject || h.id;
+  s.title = h.subject || '';
+
+  const t = document.createElement('div');
+  t.className = 'hist-time';
+  t.textContent = relTime(h.ts);
+
+  row.appendChild(s);
+  row.appendChild(t);
+
+  if (h.viewUrl) {
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => {
+      browser.tabs.create({ url: h.viewUrl, active: true });
+    });
+  }
+  return row;
 }
 
-// --- wiring ----------------------------------------------------------------
+/* ---- interactions ---- */
 
-$('copy-current').addEventListener('click', (e) => {
-  const v = $('current-mail').value;
-  if (v) copy(v, e.currentTarget);
+$('#copy').addEventListener('click', async () => {
+  const addr = $('#addr').textContent;
+  if (!addr || addr === '—') return;
+  const btn = $('#copy');
+  if (await copyText(addr)) {
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 1100);
+  }
 });
 
-$('new-address').addEventListener('click', async () => {
-  // ask the background to ensure a tab exists and click #click-to-delete
-  await browser.runtime.sendMessage({ type: 'newAddress' });
-  setTimeout(() => window.close(), 500);
+$('#new').addEventListener('click', async () => {
+  const btn = $('#new');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    await browser.runtime.sendMessage({ type: 'newAddress' });
+  } catch { /* ignore */ }
+  btn.disabled = false;
+  btn.textContent = 'New';
+
+  // Refresh a few times while the site generates the new address.
+  setTimeout(render, 500);
+  setTimeout(render, 2500);
+  setTimeout(render, 6000);
 });
 
-$('clear').addEventListener('click', async () => {
-  await browser.storage.local.remove(['history']);
-  refresh();
-});
+/* ---- lifecycle ---- */
 
-$('clear-mail').addEventListener('click', async () => {
-  await browser.storage.local.remove(['mailItems']);
-  refresh();
-});
+browser.storage.onChanged.addListener(() => { render(); });
 
-$('open-inbox').addEventListener('click', async (e) => {
-  e.preventDefault();
-  const { lastUrl } = await browser.storage.local.get('lastUrl');
-  if (lastUrl) { window.open(lastUrl, '_blank', 'noopener'); window.close(); }
-});
+// Ask background to nudge a fresh scan when the popup opens.
+(async () => {
+  try { await browser.runtime.sendMessage({ type: 'refresh' }); } catch { /* ignore */ }
+  render();
+})();
 
-browser.storage.onChanged.addListener(refresh);
-refresh();
+setInterval(render, 10000); // keep relative times fresh
