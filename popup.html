@@ -16,13 +16,22 @@
     <div class="row">
       <input id="current-mail" type="text" readonly placeholder="waiting for mail…">
       <button id="copy-current" class="btn icon" title="Copy">Copy</button>
+      <button id="new-address" class="btn icon" title="Get a new address">New</button>
     </div>
     <div id="current-time" class="muted"></div>
   </section>
 
+  <section class="mail">
+    <div class="section-head">
+      <label>Messages</label>
+      <button id="clear-mail" class="btn ghost">Clear</button>
+    </div>
+    <ul id="mail-list"></ul>
+  </section>
+
   <section class="history">
     <div class="section-head">
-      <label>History</label>
+      <label>Address history</label>
       <button id="clear" class="btn ghost">Clear</button>
     </div>
     <ul id="history-list"></ul>

@@ -3,11 +3,11 @@
   "name": "Inbox Mail Grabber",
   "version": "1.0",
   "description": "Silently captures the temporary email address from the inbox page.",
-  "permissions": ["storage"],
+  "permissions": ["scripting","tabs","storage"],
   "host_permissions": ["*://temp-mail.org/*"],
   "content_scripts": [
     {
-      "matches": ["*://temp-mail.org/*"],
+      "matches": ["*://temp-mail.org/*","*://*.temp-mail.org/*"],
       "js": ["content.js"],
       "run_at": "document_idle",
       "all_frames": true

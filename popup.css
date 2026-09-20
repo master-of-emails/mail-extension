@@ -182,3 +182,177 @@ ul::-webkit-scrollbar-thumb:hover { background: #555; }
 
 /* copied flash */
 .btn.copied { background: var(--ok); color: #0b3d1e; }
+.codes, .links { position: relative; }
+
+.tiny { font-size: 10px; margin: 6px 0 0; line-height: 1.35; }
+
+#codes-list, #links-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#codes-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+#codes-list .code {
+  font-size: 18px;
+  letter-spacing: 2px;
+  font-weight: 600;
+  color: var(--accent);
+}
+#codes-list .ctx {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+  flex: 1;
+}
+
+#links-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#links-list .link-btn {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#links-list .link-btn:hover { border-color: var(--accent); }
+
+#links-list .link-btn.trusted  { border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); }
+#links-list .link-btn.unknown  { border-color: color-mix(in srgb, #f5b400 45%, var(--border)); }
+#links-list .link-btn.tracker  { border-color: color-mix(in srgb, #f55 45%, var(--border)); }
+
+#links-list .host {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trust-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.trust-btn:hover { color: var(--text); border-color: var(--text); }
+#mail-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 320px; overflow-y: auto;
+}
+
+.mail-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mail-item.has-cta { border-color: color-mix(in srgb, var(--ok) 50%, var(--border)); }
+.mail-item.no-cta  { opacity: 0.85; }
+
+.mail-subject {
+  font-size: 12px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mail-meta {
+  font-size: 10px; color: var(--muted);
+}
+
+.cta-btn {
+  display: block; width: 100%;
+  text-align: left;
+  background: var(--accent);
+  color: white;
+  border: none; border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit; font-size: 12px;
+  cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cta-btn:hover { background: var(--accent-hover); }
+.cta-btn .host {
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  opacity: 0.8;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.code-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.code-row .code {
+  font-family: ui-monospace, monospace;
+  font-size: 16px; letter-spacing: 1.5px; font-weight: 600;
+  color: var(--accent);
+}
+.code-row .btn { padding: 4px 8px; font-size: 11px; }
+
+.view-link {
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+  align-self: flex-start;
+}
+.view-link:hover { color: var(--accent); }
+.raw-url {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: var(--muted);
+  word-break: break-all;
+  line-height: 1.35;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  user-select: text;   /* selectable AND click-copies */
+}
+.raw-url:hover { color: var(--accent); border-color: var(--accent); }
+.no-url {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--muted);
+  padding: 4px 2px;
+}
